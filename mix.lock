@@ -1,0 +1,3 @@
+%{
+  "chessfold": {:git, "https://github.com/kokolegorille/chessfold", "87e73c5d66980fc3e06fd06140576633885ff458", []},
+}
