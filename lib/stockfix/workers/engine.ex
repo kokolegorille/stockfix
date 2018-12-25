@@ -2,9 +2,12 @@ defmodule Stockfix.Workers.Engine do
   use GenServer
   require Logger
 
-  @default_filename "stockfish-10-64"
-  @default_exec_name "#{:code.priv_dir(:stockfix)}/#{@default_filename}"
-  @max_time :infinity
+  @mac_exec   "stockfish-10-64"
+  @linux_exec "stockfish-10-x64"
+  @win_exec   "stockfish-10-x64.exe"
+
+  # Ponder mode require infinity...
+  @max_time   :infinity
 
   alias __MODULE__
 
@@ -80,14 +83,14 @@ defmodule Stockfix.Workers.Engine do
     handle_continue({:init_state, Enum.into(args, %{})}, state)
   end
   def handle_continue({:init_state, args}, state) when is_map(args) do
-    exec_name = Map.get(args, :exec_name, @default_exec_name)
-    port = Port.open({:spawn, exec_name}, [{:line, 4096}, :binary, :use_stdio])
-
-    case initialize_uci(port) do
-      {_header, :timeout} ->
-        {:stop, "Bad engine initialization"}
-      {header, options} ->
-        {:noreply, %{state | port: port, header: header, options: options}}
+    with exec_name <- Map.get(args, :exec_name, default_exec_name()),
+      true <- File.exists?(exec_name),
+      port <- Port.open({:spawn, exec_name}, [{:line, 4096}, :binary, :use_stdio]),
+      {header, options} <- initialize_uci(port)
+    do
+      {:noreply, %{state | port: port, header: header, options: options}}
+    else
+      _ -> {:stop, "Bad engine initialization"}
     end
   end
 
@@ -261,5 +264,17 @@ defmodule Stockfix.Workers.Engine do
         acc
       end
     end)
+  end
+
+  def default_exec_name() do
+    "#{:code.priv_dir(:stockfix)}/#{default_filename()}"
+  end
+
+  def default_filename() do
+    case :os.type do
+      {:unix, :darwin} -> @mac_exec
+      {:unix, _} -> @linux_exec
+      {_, _} -> @win_exec
+    end
   end
 end

@@ -83,10 +83,16 @@ defmodule Stockfix.TextClient do
     fen
     |> Chessfold.string_to_position()
     |> Chessfold.print_position()
-    |> IO.inspect()
+    |> Enum.map(fn row ->
+      row
+      |> Enum.map(&piece_to_unicode(&1))
+      |> Enum.join(" ")
+    end)
+    |> Enum.join("\n")
+    |> IO.puts()
   end
 
-  def to_uci_move(move) do
+  defp to_uci_move(move) do
     regex = ~r/(?<move>.*)=(?<promotion>.+)/
     case Regex.named_captures(regex, move) do
       %{"move" => mv, "promotion" => promotion} ->
@@ -96,11 +102,30 @@ defmodule Stockfix.TextClient do
     end
   end
 
-  def from_uci_move(move) do
+  defp from_uci_move(move) do
     case String.length(move) do
       4 -> move
       5 -> "#{String.slice(move, 0, 4)}=#{move |> String.at(4) |> String.upcase()}"
       _ -> nil
+    end
+  end
+
+  defp piece_to_unicode(piece) do
+    # https://fr.wikipedia.org/wiki/Symboles_d%27%C3%A9checs_en_Unicode
+    case piece do
+      "K" -> "\u2654"
+      "Q" -> "\u2655"
+      "R" -> "\u2656"
+      "B" -> "\u2657"
+      "N" -> "\u2658"
+      "P" -> "\u2659"
+      "k" -> "\u265A"
+      "q" -> "\u265B"
+      "r" -> "\u265C"
+      "b" -> "\u265D"
+      "n" -> "\u265E"
+      "p" -> "\u265F"
+      _ -> piece
     end
   end
 end
