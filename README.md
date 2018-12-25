@@ -13,6 +13,8 @@ It depends on chessfold for managing chess logic.
 
 ## UCI client for Stockfish
 
+The engine is ...
+
 filename = "stockfish-10-64"
 exec_name = "#{:code.priv_dir(:stockfix)}/#{filename}"
 
@@ -20,6 +22,7 @@ exec_name = "#{:code.priv_dir(:stockfix)}/#{filename}"
 
 https://chess.stackexchange.com/questions/14216/im-confused-by-uci-pondering-and-time-control
 
+```
 GUI -> engine1: position startpos
 GUI -> engine1: go wtime 100000 winc 1000 btime 100000 binc 1000
 engine1 -> GUI: bestmove e2e4 ponder e7e6
@@ -29,11 +32,13 @@ GUI -> engine1: go ponder wtime 98123 winc 1000 btime 100000 binc 1000
 GUI -> engine1: ponderhit
 [engine keeps thinking]
 engine1 -> GUI: bestmove d2d4 ponder d7d5
+```
 
 http://www.open-chess.org/viewtopic.php?f=5&t=2146
 
 **Ponderhit example:**
 
+```
 gui -> engine: position p1 [initial position]
 gui -> engine: go wtime xxx btime yyy [engine starts searching]
 ... time passes
@@ -44,9 +49,11 @@ gui -> engine: go ponder wtime xxx btime yyy [engine starts searching]
 gui -> engine: ponderhit [engine may or may not continue searching depending on time management]
 ... time passes (or not, engine is free to reply instantly)
 gui <- engine: bestmove a3a4 ponder a6a5
+```
 
 **Pondermiss example:**
 
+```
 gui -> engine: position p1
 gui -> engine: go wtime xxx btime yyy [engine starts searching]
 ... time passes
@@ -58,6 +65,7 @@ gui -> engine: stop [engine stops searching]
 gui <- engine: bestmove m1 ponder m2 [this is discarded by gui -]
 gui -> engine: position p1 moves a2a3 b7b6... [- because engine2 played a different move]
 gui -> engine: go...
+```
 
 ## Usage
 
