@@ -11,6 +11,9 @@ Put the file inside priv, and set the default name inside Engine Worker.
 
 It depends on chessfold for managing chess logic.
 
+It is based on https://github.com/twilio/chessms
+An Erlang client for Chess via SMS.
+
 ## UCI client for Stockfish
 
 The engine is ...
