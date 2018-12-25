@@ -8,43 +8,56 @@ defmodule Stockfix.TextClient do
   alias __MODULE__
 
   @default_fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-  @default_options [movetime: 30_000]
+  @default_options [movetime: 20_000]
+  @default_ponder_mode true
 
   defstruct(
     engine: nil,
     fen: nil,
     moves: [],
     bestmove: nil,
-    ponder: nil
+    ponder: nil,
+    ponder_mode: @default_ponder_mode
   )
 
-  def start(fen \\ @default_fen) do
+  def start(options \\ []) do
+    fen = Keyword.get(options, :fen, @default_fen)
+    ponder_mode = Keyword.get(options, :ponder_mode, @default_ponder_mode)
+
     case Chessfold.string_to_position(fen) do
       %Chessfold.Position{} = _position ->
         {:ok, engine} = Engine.start_link()
         display_fen(fen)
-        %TextClient{engine: engine, fen: fen}
+        %TextClient{engine: engine, fen: fen, ponder_mode: ponder_mode}
       {:error, reason} ->
         {:error, reason}
     end
   end
 
   def play(
-    %TextClient{engine: engine, fen: fen, moves: moves} = client,
+    %TextClient{
+      engine: engine, fen: fen, moves: moves, ponder: ponder, ponder_mode: ponder_mode
+    } = client,
     move,
     options \\ @default_options
   ) do
     position = Chessfold.string_to_position(fen)
     case Chessfold.play(position, move) do
       {:ok, %Chessfold.Position{} = position} ->
-        # Check if ponder = move
-        # If so, ponderhit
-        # if not, send a stop, if ponder is on!
+        if ponder_mode do
+          if ponder == move do
+            Engine.cast(engine, "ponderhit")
+          else
+            Engine.cast(engine, "stop")
+          end
+        end
 
         fen = Chessfold.position_to_string(position)
         Engine.position(engine, fen, to_uci_move(move))
 
+        # This blocks until the engine has finished!
         output = Engine.go(engine, options)
+
         regex = ~r/bestmove (?<bestmove>.*) ponder (?<ponder>.*)/
         {_datetime, result_line} = List.first(output)
 
@@ -52,11 +65,14 @@ defmodule Stockfix.TextClient do
           %{"bestmove" => bestmove, "ponder" => ponder} ->
             Logger.debug fn -> "bestmove : #{bestmove} ponder : #{ponder}" end
 
-            # start ponder if activated
-
             {:ok, position} = Chessfold.play(position, from_uci_move(bestmove))
             new_fen = Chessfold.position_to_string(position)
             display_fen(new_fen)
+
+            if ponder_mode do
+              # start ponder mode
+              Engine.cast(engine, "go ponder #{ponder}")
+            end
 
             # Store moves (in reverse order)
             %{client |
@@ -105,7 +121,13 @@ defmodule Stockfix.TextClient do
   defp from_uci_move(move) do
     case String.length(move) do
       4 -> move
-      5 -> "#{String.slice(move, 0, 4)}=#{move |> String.at(4) |> String.upcase()}"
+      5 ->
+        # The move is a promotion!
+        start_move = String.slice(move, 0, 4)
+        promotion_piece = move
+        |> String.at(4)
+        |> String.upcase()
+        "#{start_move}=#{promotion_piece}"
       _ -> nil
     end
   end

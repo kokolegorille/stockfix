@@ -177,6 +177,13 @@ defmodule Stockfix.Workers.Engine do
   end
 
   @impl true
+  def handle_info({port, {:data, {:eol, line}}}, %Engine{port: port} = state) do
+    # This receive unlimited data from port in pondering mode
+    Logger.debug fn -> "#{inspect port} ponder mode : #{(line)}" end
+    {:noreply, state}
+  end
+
+  @impl true
   def terminate(reason, %Engine{} = _state) do
     Logger.debug fn -> "#{__MODULE__} is stopping : #{inspect(reason)}" end
     :ok
@@ -215,13 +222,6 @@ defmodule Stockfix.Workers.Engine do
 
   defp go_loop(port, acc) do
     receive do
-      # {_, :stop} ->
-      #   send_command(port, "stop")
-      #   acc
-      # {_, :ponderhit} ->
-      #   send_command(port, "ponderhit")
-      #   acc
-
       {^port, {:data, {:eol, "bestmove " <> _rest = line}}} ->
         [{DateTime.utc_now(), line} | acc]
       {^port, {:data, {:eol, data}}} ->
