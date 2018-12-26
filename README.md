@@ -73,7 +73,7 @@ gui -> engine: go...
 ## Usage
 
 ```elixir
-iex(1)> client = Stockfix.TextClient.start      
+iex> client = Stockfix.TextClient.start      
 ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜
 ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟
 . . . . . . . .
@@ -82,14 +82,7 @@ iex(1)> client = Stockfix.TextClient.start
 . . . . . . . .
 ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙
 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
-%Stockfix.TextClient{
-  bestmove: nil,
-  engine: #PID<0.158.0>,
-  fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-  moves: [],
-  ponder: nil
-}
-iex(2)> client = Stockfix.TextClient.play client, "e2e4"
+Your move: e2e4
 # lots of lines
 04:05:21.115 [debug] 2018-12-25 03:05:21.115526Z "info depth 26 currmove e7e6 currmovenumber 1"
  
@@ -108,12 +101,5 @@ iex(2)> client = Stockfix.TextClient.play client, "e2e4"
 . . . . . . . .
 ♙ ♙ ♙ ♙ . ♙ ♙ ♙
 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
-%Stockfix.TextClient{
-  bestmove: "e7e6",
-  engine: #PID<0.158.0>,
-  fen: "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-  moves: ["e7e6", "e2e4"],
-  ponder: "d2d4"
-}
-iex(3)>
+Your move: 
 ```
